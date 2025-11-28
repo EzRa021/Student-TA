@@ -440,20 +440,9 @@ public class TADashboardController extends DashboardController {
 
         actionColumn.setCellFactory(col -> new TableCell<Request, Void>() {
             private final HBox actionBox = new HBox(5);
-            private final Button replyBtn = new Button("Reply");
             private final Button viewBtn = new Button("View");
             private final Button claimBtn = new Button("Claim");
             {
-                replyBtn.setStyle(
-                        "-fx-font-size: 11; -fx-padding: 5 8; -fx-background-color: #27ae60; -fx-text-fill: white; -fx-background-radius: 3;");
-                replyBtn.setOnAction(e -> {
-                    Request request = getTableRow().getItem();
-                    if (request != null) {
-                        previousViewName = "allPendingView";
-                        showReplyPage(request);
-                    }
-                });
-
                 viewBtn.setStyle(
                         "-fx-font-size: 11; -fx-padding: 5 8; -fx-background-color: #95a5a6; -fx-text-fill: white; -fx-background-radius: 3;");
                 viewBtn.setOnAction(e -> {
@@ -483,7 +472,7 @@ public class TADashboardController extends DashboardController {
                     Request request = getTableRow().getItem();
                     if (request != null && request.getStatus() == RequestStatus.PENDING) {
                         actionBox.getChildren().clear();
-                        actionBox.getChildren().addAll(replyBtn, viewBtn);
+                        actionBox.getChildren().addAll(viewBtn);
 
                         // Can only claim if unassigned OR already assigned to this TA
                         boolean canClaim = request.getAssignedTo() == null ||

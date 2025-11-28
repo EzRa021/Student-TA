@@ -120,11 +120,7 @@ public class LoginController {
                         backendStatusLabel.setText("✗ Backend Offline");
                         backendStatusLabel.setStyle("-fx-text-fill: #f44336; -fx-font-weight: bold;");
                         showErrorAlert("Backend Connection Failed",
-                                "Cannot connect to backend server at http://localhost:8080\n\n" +
-                                        "Make sure the Spring Boot application is running:\n" +
-                                        "  mvn spring-boot:run\n\n" +
-                                        "Or with Docker:\n" +
-                                        "  docker-compose up");
+                                "Cannot connect to backend server at http://localhost:8080\n\n");
                     }
                 });
             } catch (Exception e) {

@@ -5,7 +5,6 @@ This manual explains how the Lab Management System works for the two primary use
 How to use this file
 - Read the role-specific sections (TA / Student) for user-facing workflows and UI guidance.
 - Add the recommended screenshots (filenames are suggested) in the indicated places. Each screenshot suggestion includes a caption and alt text.
-- Use the appendix for technical or admin notes if needed.
 
 ---
 
@@ -17,12 +16,105 @@ Both dashboards use real-time updates (WebSockets) for new requests and replies.
 
 ---
 
+## Authentication Flows
+
+### Registration
+
+Both Students and TAs register on the same registration page with **separate tabs** to switch between roles. The registration page validates all input and sends requests to different backend endpoints based on the selected role.
+
+**Prerequisites:**
+- User has not yet created an account
+- Internet connection to the backend (http://localhost:8080)
+- Valid email address
+
+**Registration Page Layout:**
+- Two prominent tabs at the top: "Student Registration" and "TA Registration"
+- Single form that updates labels based on selected tab
+- Student tab is active by default
+
+**Step-by-step process (Student Registration):**
+1. On the login screen, click "Sign Up" link
+2. The registration page opens with the **Student Registration** tab selected
+3. Fill in the registration form:
+   - **Student ID**: Must start with "STU" followed by 3+ digits (e.g., STU001, STU123)
+   - **Username**: 3-20 characters, letters, numbers, and underscores only (e.g., john_smith_01)
+   - **Email**: Valid email address (validated with regex pattern)
+   - **Password**: Minimum 6 characters
+   - **Confirm Password**: Must match password field
+4. Click the "Register" button
+5. Backend validates:
+   - Student ID format (STU###)
+   - Username uniqueness and format
+   - Email uniqueness and format
+   - Password requirements
+6. On success:
+   - Success dialog appears with message: "Student account created successfully! Please log in with your username and password."
+   - Page automatically redirects to login screen
+
+**Step-by-step process (TA Registration):**
+1. On the login screen, click "Sign Up" link
+2. On the registration page, click the **TA Registration** tab (button color changes to blue)
+3. Form labels update to show "TA ID *" instead of "Student ID *"
+4. Fill in the registration form:
+   - **TA ID**: Must start with "TA" followed by 3+ digits (e.g., TA001, TA205)
+   - **Username**: 3-20 characters, letters, numbers, and underscores only
+   - **Email**: Valid email address
+   - **Password**: Minimum 6 characters
+   - **Confirm Password**: Must match password field
+5. Click the "Register" button
+6. Backend validates using the `/auth/register-ta` endpoint with same validation rules
+7. On success:
+   - Success dialog appears with message: "TA account created successfully! Please log in with your username and password."
+   - Page automatically redirects to login screen
+
+**Key Registration Features:**
+- **Real-time validation**: Form shows error messages immediately below fields
+- **Tab switching**: Form clears all fields when switching between Student/TA tabs
+- **Loading indicator**: Spinning progress indicator appears during registration submission
+- **Error handling**: Clear error messages for all validation failures:
+  - "All fields are required"
+  - "ID must be in format: STU### (e.g., STU001)"
+  - "ID must be in format: TA### (e.g., TA001)"
+  - "Username must be 3-20 characters, letters, numbers, and underscores only"
+  - "Please enter a valid email address"
+  - "Passwords do not match"
+  - "Password must be at least 6 characters"
+  - "Username or email already exists. Please choose a different one."
+
+**Security notes:**
+- Password is encrypted using Bcrypt (one-way hashing) — passwords cannot be recovered
+- Validation happens both frontend (immediate feedback) and backend (final authority)
+- No role can be overridden; role is determined strictly by which endpoint is called
+- Sensitive data (passwords) never appear in logs
+
+**What to capture (screenshot):**
+- `registration_student_tab.png` — Student Registration tab selected, showing STU ID format
+  - Caption: "Student Registration tab — enter Student ID starting with STU (e.g., STU001)."
+  - Alt text: "Registration form with Student Registration tab active, showing STU ID field and other signup fields."
+- `registration_ta_tab.png` — TA Registration tab selected, showing TA ID format
+  - Caption: "TA Registration tab — enter TA ID starting with TA (e.g., TA001)."
+  - Alt text: "Registration form with TA Registration tab active, showing TA ID field and other signup fields."
+- `registration_error.png` — Error message displayed for invalid input
+  - Caption: "Validation error — form shows immediate feedback for invalid entries."
+  - Alt text: "Registration form displaying error message for invalid student ID format."
+
+**Troubleshooting:**
+- **"ID must be in format: STU### / TA###"**: ID must start with correct prefix and have 3+ digits
+- **"Username already exists"**: Choose a different username (usernames are unique)
+- **"Email already registered"**: Use a different email address
+- **"Passwords do not match"**: Ensure both password fields are identical
+- **"Password must be at least 6 characters"**: Create a longer password
+- **Cannot connect to backend**: Verify Spring Boot application is running on http://localhost:8080
+
+---
+---
+
 ## TA Dashboard — Full Manual
 
 ### Purpose
-The TA dashboard is the TA's workspace for receiving, claiming, replying to, prioritizing, and resolving student help requests. It shows a live-updating list of requests and provides tools for conversation and administrative updates (priority, resolve).
+The TA dashboard is the TA's workspace for receiving, claiming, replying to, and resolving student help requests. It shows a live-updating list of requests and provides tools for conversation and request management (priority, resolve).
 
-### Login
+### Login (TA)
 What happens:
 - TA navigates to the login screen and submits credentials.
 - Backend validates credentials and returns an access token (JWT) and a refresh token.
@@ -146,7 +238,7 @@ What to capture:
   - Alt text: "Sidebar statistics showing counts of pending and in-progress requests."
 
 Suggested text:
-- "Use the sidebar stats for a quick sense of workload. If counts appear incorrect, refresh or check the server-side stats endpoint (admin-only)."
+- "Use the sidebar stats for a quick sense of workload. If counts appear incorrect, refresh the page to reload data."
 
 ### Real-time behavior and error handling
 What it does:
@@ -162,7 +254,6 @@ Suggested text:
 
 ### Security & role notes for TAs
 - TA endpoints are protected by role-based authorization. The backend enforces role checks even if the frontend hides buttons.
-- Do not attempt admin actions unless you have the ADMIN role; those actions are separate and restricted.
 
 ### Screenshot and formatting tips (TA)
 - Use PNG format, 1280×720 or higher for clarity.
@@ -176,19 +267,47 @@ Suggested text:
 ### Purpose
 The Student dashboard allows students to create help requests, monitor their status, view TA replies, edit or delete unclaimed requests, and receive real-time updates when TAs reply or resolve requests.
 
-### Login
-What happens:
-- Student logs in on the same login page as TAs and is redirected to the Student dashboard.
+### Getting Started (Registration & Login)
+
+**First-time Student Registration:**
+1. From login screen, click "Sign Up" link
+2. Student Registration tab is selected by default
+3. Enter Student ID (format: STU###), username, email, and password
+4. Click "Register"
+5. Success dialog appears, then redirects to login
+6. Log in with your username and password to access Student Dashboard
+
+**First-time TA Registration:**
+1. From login screen, click "Sign Up" link
+2. Click "TA Registration" tab to switch roles
+3. Enter TA ID (format: TA###), username, email, and password
+4. Click "Register"
+5. Success dialog appears, then redirects to login
+6. Log in with your username and password to access TA Dashboard
+
+**Returning User Login:**
+1. Enter your username and password on login screen
+2. Click "Login" button
+3. Backend authenticates credentials and returns JWT tokens
+4. Frontend stores tokens and redirects to appropriate dashboard based on your role
+5. Real-time WebSocket connection is established
+6. Optional: Check "Remember Me" checkbox to auto-login on next launch
+
+**Token Management:**
+- Your access token expires after 24 hours
+- System automatically uses refresh token to request new access token (transparent to user)
+- You remain logged in unless you manually click "Logout"
+- "Remember Me" saves credentials locally for auto-login (optional)
 
 What to capture:
-- `student_login.png` — If the login screen differs visually, capture it; otherwise reuse `ta_login.png`.
-  - Caption: "Student Login — sign in to create and track help requests."
-  - Alt text: "Login form with fields for username and password."
+- `login_page_with_links.png` — Login page showing "Sign Up" link
+  - Caption: "Login page — sign in with your credentials or create a new account."
+  - Alt text: "Login form with username and password fields, Remember Me checkbox, and Sign Up link."
 
 Suggested text:
-- "Students authenticate using their assigned credentials. After login they land on the Student dashboard where they can raise new requests and monitor replies."
+- "Existing users log in with their username and password. New users click 'Sign Up' to create an account. The system redirects you to your appropriate dashboard based on your role (Student or TA)."
 
-### Create new request
+### Student Dashboard
 What it does:
 - Student opens "New Request" or "Create" form, fills title and description, optionally adds attachments, and submits; the backend saves the request with `PENDING` status.
 
@@ -268,21 +387,23 @@ Suggested text:
 Place images inline in your report immediately after the paragraph that describes the feature. Use consistent filenames and a small caption text under each image.
 
 Suggested checklist (copy into your report editor):
+- [ ] `registration_student_tab.png` — Student Registration tab with STU ID format
+- [ ] `registration_ta_tab.png` — TA Registration tab with TA ID format
+- [ ] `registration_error.png` — Validation error message
+- [ ] `login_page_with_links.png` — Login page with "Sign Up" link and "Remember Me" checkbox
 - [ ] `ta_login.png` — TA Login screen
-- [ ] `ta_dashboard_overview.png` — TA dashboard full view
-- [ ] `ta_all_requests.png` — All Requests table
+- [ ] `ta_dashboard_overview.png` — TA dashboard full view with sidebar
+- [ ] `ta_all_requests.png` — All Requests table with PENDING items
 - [ ] `ta_in_progress.png` — In Progress view with reply box
 - [ ] `ta_request_detail.png` — Request detail view
 - [ ] `ta_reply_thread.png` — Reply thread with Send button
 - [ ] `ta_priority_update.png` — Priority control
 - [ ] `ta_resolve_confirmation.png` — Resolve confirmation
-- [ ] `ta_stats_sidebar.png` — Sidebar stats
-- [ ] `student_login.png` — Student Login (if different)
+- [ ] `ta_stats_sidebar.png` — Sidebar statistics
 - [ ] `student_new_request.png` — Create Request form
 - [ ] `student_my_requests.png` — My Requests list
-- [ ] `student_request_detail.png` — Student request detail
-- [ ] `student_reply_view.png` — Reply thread from student's view
-- [ ] `student_edit_delete.png` — Edit/delete confirmation
+- [ ] `student_request_detail.png` — Student request detail with replies
+- [ ] `student_edit_delete.png` — Edit/delete options for unclaimed requests
 
 For each image provide:
 - A short caption (1 line) and an alt text entry.

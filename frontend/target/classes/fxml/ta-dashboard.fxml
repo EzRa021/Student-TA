@@ -7,7 +7,7 @@
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.lms.ui.controller.TADashboardController" 
             styleClass="root-pane" 
-            stylesheets="@../css/modern-dashboard.css">
+            stylesheets="@../css/styles1.css">
     
     <!-- Modern Top Navigation Bar -->
     <top>
